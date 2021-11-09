@@ -605,14 +605,21 @@ class DictionaryObject(dict, PdfObject):
             # this is a stream object, not a dictionary
             assert "/Length" in data
             length = data["/Length"]
-            if debug: print(data)
+            if debug: # Argun
+                print(data)
+                print(stream)
+                print("length:", length)
             stream_start = stream.tell()
             if isinstance(length, IndirectObject):
                 length = pdf.getObject(length)
                 stream.seek(stream_start, 0)
+            # Argun: Problem with this Indirect Object
+            if isinstance(length, NullObject):
+                # print("isinstance(length, NullObject)", length)
+                length = 2048 # Arbitrary number
             data["__streamdata__"] = stream.read(length)
             if debug: print("here")
-            #if debug: print(binascii.hexlify(data["__streamdata__"]))
+            # if debug: print(binascii.hexlify(data["__streamdata__"]))
             e = readNonWhitespace(stream)
             ndstream = stream.read(8)
             if (e + ndstream) != b_("endstream"):
@@ -640,7 +647,8 @@ class DictionaryObject(dict, PdfObject):
                     else:
                         if debug: print(("E", e, ndstream, debugging.toHex(end)))
                         stream.seek(pos, 0)
-                        raise utils.PdfReadError("Unable to find 'endstream' marker after stream at byte %s." % utils.hexStr(stream.tell()))
+                        # Argun: After putting an arbitrary number above for length, commented this out.
+                        # raise utils.PdfReadError("Unable to find 'endstream' marker after stream at byte %s." % utils.hexStr(stream.tell()))
         else:
             stream.seek(pos, 0)
         if "__streamdata__" in data:
